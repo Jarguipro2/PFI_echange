@@ -1,0 +1,1056 @@
+<!--------------------------------------------------------------------------------------------------
+    Single Page Application
+    NEWS WEB CLIENT
+
+    LAST UPDATE: december 2021
+    Author: Nicolas Chourot and Guillaume Jarry
+    Lionel-Groulx College
+----------------------------------------------------------------------------------------------------->
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta charset="ISO-8859-1" content="text/html" http-equiv="Content-Type">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <title>Mes nouvelles</title>
+
+    <!---STYLES BUNDLE -------------------------------------------------------------------------->
+    <link href="css/jquery-ui.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@700&display=swap" rel="stylesheet">
+
+
+    <!-- Tooltips styles -->
+    <link href="css/tooltip.css" rel="stylesheet">
+
+    <!-- Confirm dialog styles -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css" rel="stylesheet">
+    <!-- Font awesome styles -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- photo manager main layout styles -->
+    <link href="css/photosManagerLayout.css" rel="stylesheet">
+
+    <!-- favicon link: use https://favicon.io/favicon-converter/ to create new favicon -->
+    <link href="favicon.ico" rel="icon">
+
+    <!---Page backgroung image------------------------------------------------------------------>
+    <style>
+        body {
+            background: url(images/bg.png) no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="title-container">
+        <div>
+            <img alt="fav" src="images/favicon.png" style="height: 6rem; margin-right:8px;float:left;">
+            <div class="glyphicon glyphicon-plus-sign" id="add-news" style="height: 6rem; width: 6rem;"></div>
+            <label for="search_user"></label>
+            <select class="user-input-form" id="search_user">
+                <option disabled hidden selected value="undefined">Recherche par auteur</option>
+            </select>
+            <label for="search_title"></label><input class="user-input-form" id="search_title"
+                                                     placeholder="Recherche par mot-clés" type="search" value=""/>
+        </div>
+
+        <div>
+            <img alt="Avatar" class="avatar" src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg" hidden>
+            <span id="username">Non connecté</span>
+            <div id="btn_OpenLoginForm" tooltip="Connexion" tooltip-position="left">
+                <span class="giconBig glyphicon glyphicon-log-in" id="showSearchIcon">&nbsp;</span>
+            </div>
+
+            <div id="btn_OpenConfirmLogout" tooltip="Déconnexion" tooltip-position="bottom">
+                <span class="giconBig glyphicon glyphicon-log-out" id="showSearchIcon">&nbsp;</span>
+            </div>
+
+            <div id="btn_OpenProfilDialog" tooltip="Enregistrement" tooltip-position="left">
+                <img class="icon" id="showRegister" src="images/register.png">
+            </div>
+        </div>
+
+    </div>
+
+    <div class="array-container">
+        <div class="photo-list-scroll-containter">
+            <div class="photo-list-container" id="newsList">
+                <!-- La liste de photos sera injectée ici par du JavaScript -->
+
+            </div>
+        </div>
+    </div>
+
+    <!---PHOTO DIALOG------------------------------------------------------------------------>
+    <div class="dialog" id="dialog-photoForm" title="photo">
+        <form class="form-group" id="photoForm">
+            <input id="photoId" type="hidden"/>
+            <input id="photoUserId" type="hidden"/>
+            <input id="photoGUID" type="hidden"/>
+            <input id="photoCreated" type="hidden"/>
+            <input class="form-control" id="photoTitle" placeholder="Titre" type="text"/>
+            <input class="form-control" id="photoDescription" placeholder="Description" type="text"/>
+            <table>
+                <tr>
+                    <td style="padding:4px;"><label for="photoShared">Partagée</label></td>
+                    <td style="padding:4px;"><input id="photoShared" name="photoShared" type="checkbox"/></td>
+                </tr>
+            </table>
+            <div style="vertical-align:top; text-align: center ">
+                <div class='imageDownloader' defautImageSrc='images/No_image.png' id='photo'></div>
+                <label>(cliquez pour la changer l'image)</label>
+            </div>
+        </form>
+    </div>
+
+    <!---LOGIN DIALOG--------------------------------------------------------------------------->
+    <div class="dialog" id="dialog-loginForm" title="Connexion">
+        <form class="form-group" id="loginForm">
+            <input class="form-control" id="loginEmail" placeholder="Courriel" type="text"/>
+            <input class="form-control" id="loginPassword" placeholder="Mot de passe" type="password"/>
+            <br>
+            <div class="form-group form-check">
+                <input class="form-check-input" id="remember-me" type="checkbox">
+                <label class="form-check-label" for="remember-me">Se souvenir de moi</label>
+            </div>
+        </form>
+    </div>
+
+    <!---PROFIL DIALOG-------------------------------------------------------------------------->
+    <div class="dialog" id="dialog-profilForm" title="Profil">
+        <form class="form-group" id="profilForm">
+            <input id="avatarGUID" type="hidden"/>
+            <input id="profilId" type="hidden"/>
+            <input class="form-control" id="profilUsername" placeholder="Nom d'usager" type="text"/>
+            <input class="form-control" id="profilEmail" placeholder="Courriel" type="text"/>
+            <input class="form-control" id="profilPassword" placeholder="Mot de passe" type="password"/>
+            <br>
+            <input class="form-control" id="profilConfirmPassword" placeholder="Confirmation" type="password"/>
+            <br>
+            <div style="vertical-align:top; text-align: center ">
+                <div class='imageDownloader' defautImageSrc='images/No_Avatar.png' id='avatar'></div>
+                <label>(cliquez pour la changer l'avatar)</label>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!---WAITING DIALOG-------------------------------------------------------------------------->
+    <div class="dialog" id="dialog-waiting" title="">
+        <img alt="waiting" src="images/writing.gif"/>
+    </div>
+
+    <!---SCRIPTS BUNDLE------------------------------------------------------------------------->
+    <script src="js/jquery-3.5.1.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/Validation.js"></script>
+    <script src="js/WebAPIRequest.js"></script>
+    <script src="js/jquery-confirm.js"></script>
+    <script src="js/jquery.maskedinput.js"></script>
+    <script src="js/imageUploadUtilities.js"></script>
+
+    <!---photo MANAGER UI SCRIPT------------------------------------------------------------->
+    <script>
+        "use strict";
+
+        $(document).ready(initUI);
+
+        let editMode = false;
+        let addMode = false;
+        let editProfil = false;
+        let connected = false;
+        const limit = 4;
+        let offset = null;
+        let queryString = "";
+        let search = "";
+        let searchShowed = false;
+        let sorted = [{field: "Created", desc: true}];
+        let currentETag = "";
+        let currentUsersEtag = "";
+        let photoValidationProvider = null;
+        let profilValidationProvider = null;
+        let pausephotosListPeriodicRefresh = false;
+        let periodicRefreshPeriod = 5; // seconds
+        let observer;
+
+        function initUI() {
+            initProfilValidation();
+
+            initphotoDialog();
+            initLoginDialog();
+            initProfilDialog();
+            webAPI_HEAD_Users(CheckUsersETag, console.log)
+            window.setInterval(UserDropdownPeriodicRefresh, periodicRefreshPeriod * 1000);
+            document.querySelector("#search_user").addEventListener('change', HandleUserDropdown);
+            document.querySelector("#add-news").addEventListener('click', CreateNewsForm)
+
+            $(".searchBar").hide();
+            $("#btn_OpenLoginForm").click(OpenLoginForm);
+            $("#btn_OpenConfirmLogout").click(OpenConfirmLogout);
+            $("#btn_OpenProfilDialog").click(OpenProfilDialog);
+
+            $('#showSearch').click(toogleSearchVisibility);
+
+            $("#dialog-waiting").dialog({
+                autoOpen: false,
+                show: {effect: 'fade', duration: 400},
+                hide: {effect: 'fade', duration: 400},
+                width: "200px"
+            });
+            insertWaitingStatus();
+
+            updatePhotosSearch();
+            updateUI();
+            InitPagination();
+            InitSearch();
+            installPeriodicphotosListRefresh();
+
+        }
+        function InitSearch(){
+            let searchInput = $("#search_title");
+            searchInput.keyup(HandleSearch);
+        }
+        let searchFirstTime = true;
+        function HandleSearch(e){
+            let titleRegExp = new RegExp(/Title=(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|à|â|ä|ç|é|è|ê|ë|ì|î|ï|ò|ô|ö|ù|û|ü|-|0|1|2|3|4|5|6|7|6|8|9| |\*)+/)
+            if(searchFirstTime){
+                searchFirstTime = false;
+                queryString += "&Title=" + e.currentTarget.value + "*";
+            }
+            else
+                queryString = queryString.replace(titleRegExp, ("Title=" + e.currentTarget.value + '*'))
+
+            console.log(queryString);
+            SetQueryStringOffset(0);// To avoid conflict
+            EmptyNewsList();
+            webAPI_GET_ALL(queryString, UpdateNewsList, AlertError);
+        }
+        function installPeriodicphotosListRefresh() {
+            setInterval(() => {
+                if (!pausephotosListPeriodicRefresh & connected) getPhotos();
+            }, periodicRefreshPeriod * 1000);
+        }
+
+        function initphotoDialog() {
+            $("#dialog-photoForm").dialog({
+                autoOpen: false,
+                show: {effect: 'fade', duration: 400},
+                hide: {effect: 'fade', duration: 400},
+                buttons: [
+                    {
+                        id: 'btn-Savephoto',
+                        text: 'Soumettre',
+                        click: function () {
+
+                            // Ajout d'un photo
+                            if (addMode) {
+                                let photo = makeNewsFromNewsForm(false);
+                                if (photoValidationProvider.isValid()) {
+                                    $("#dialog-waiting").dialog('open');
+                                    $("#dialog-photoForm").dialog("close");
+                                    webAPI_POST(photo, () => {
+                                        updateUI();
+                                    }, AlertError);
+                                }
+                            } else {
+                                let photo = makeNewsFromNewsForm(true);
+                                if (photoValidationProvider.isValid()) {
+                                    $("#dialog-waiting").dialog('open');
+                                    $("#dialog-photoForm").dialog("close");
+                                    webAPI_PUT(photo, () => {
+                                        updateUI();
+                                    }, AlertError);
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: 'btn-Cancelphoto',
+                        text: 'Annuler',
+                        click: function () {
+                            $(this).dialog('close');
+                        }
+                    }
+                ]
+            });
+            $('#dialog-photoForm').on('dialogopen', function (event) {
+                pausephotosListPeriodicRefresh = true;
+                $('#btn-Savephoto').addClass("btn btn-primary");
+                $('#btn-Cancelphoto').addClass("btn btn-secondary");
+                $('#photoTitle').val("");
+                $('#photoDescription').val(""); // todo set UserId field
+                clearImageData('photo');
+                $("#photoShared").prop("checked", true);
+                /// Tres important si on veut que la photo par defaut soit affichée dans le dialogue
+                setImageDownloaderBlankImage('photo');
+                $("#photoUserId").val(retrieveLoggedUser().Id);
+                $("#btn_OpenAddphotoDialog").hide();
+            });
+            $('#dialog-photoForm').on('dialogclose', function (event) {
+                addMode = false;
+                editMode = false;
+                pausephotosListPeriodicRefresh = false;
+                resetNewsValidation();
+                $("#btn_OpenAddphotoDialog").show();
+            });
+        }
+
+        function operationOnGoing() {
+            return addMode || editMode || editProfil;
+        }
+
+        function makeNewsFromNewsForm(includeId = false) {
+            if (includeId) {
+                // Récupération du Id du photo dans le contrôle caché
+                return {
+                    Id: parseInt(document.querySelector('#created-news-id').value),
+                    Title: $('#created-news-title').val(),
+                    Text: $('#created-news-text').val(),
+                    Created: $('#created-news-date').val(),
+                    GUID: $('#created-news-pictureGUID').val(),
+                    UserId: retrieveLoggedUser().Id,
+                    ImageData: getImageData('create-news')
+                };
+            }
+            return {
+                Id: 0,
+                Title: $('#created-news-title').val(),
+                Text: $('#created-news-text').val(),
+                Created: $('#created-news-date').val(),
+                GUID: $('#created-news-pictureGUID').val(),
+                UserId: retrieveLoggedUser().Id,
+                ImageData: getImageData('create-news')
+            };
+        }
+
+        function deletephoto(e) {
+            if (!operationOnGoing()) {
+                // Extraction du Id du photo inscrit dans l'attribut id de l'élément déclencheur de l'événement click
+                let photoId = e.attributes.newsId.value;
+                webAPI_GET(photoId, confirmDeletephoto, AlertError);
+            }
+        }
+
+        function confirmDeletephoto(photo) {
+            $.confirm({
+                title: 'Retrait de photos',
+                content: '<b>' + photo.Title + '</b>?',
+                buttons: {
+                    confirmer: function () {
+                        $("#dialog-waiting").dialog('open');
+                        webAPI_DELETE(photo.Id, updateUI, AlertError);
+                    },
+                    annuler: {},
+                }
+            });
+        }
+
+        function initProfilDialog() {
+            $("#dialog-profilForm").dialog(
+                {
+                    autoOpen: false,
+                    show: {effect: 'fade', speed: 400},
+                    hide: {effect: 'fade', speed: 400},
+                    buttons: [
+                        {
+                            id: 'btn-SaveProfil',
+                            text: 'Enregister',
+                            click: function () {
+                                if (profilValidationProvider.isValid()) {
+                                    let profilFromForm = {
+                                        Id: parseInt($("#profilId").val()),
+                                        Name: $("#profilUsername").val(),
+                                        Email: $("#profilEmail").val(),
+                                        Password: $("#profilPassword").val(),
+                                        AvatarGUID: $("#avatarGUID").val(),
+                                        ImageData: getImageData('avatar')
+                                    }
+                                    $("#dialog-waiting").dialog('open');
+                                    if (connected) {
+                                        webAPI_ChangeProfil(profilFromForm, () => {
+                                            $("#dialog-profilForm").dialog("close");
+                                            updateUI();
+                                        }, AlertError);
+                                    } else {
+                                        profilFromForm.Id = 0;
+                                        webAPI_Register(profilFromForm, () => {
+                                            $("#dialog-profilForm").dialog("close");
+                                            updateUI();
+                                        }, AlertError);
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            id: 'btn-CancelProfil',
+                            text: 'Annuler',
+                            click: function () {
+                                $(this).dialog('close');
+                            }
+                        },
+                        {
+                            id: 'btn-deleteProfil',
+                            text: 'Désinscription',
+                            click: function () {
+                                confirmDeleteAccount();
+                            }
+                        }
+                    ]
+                });
+            $('#dialog-profilForm').on('dialogopen', function (event) {
+                pausephotosListPeriodicRefresh = true;
+                resetProfilValidation();
+                $("#profilId").val(0);
+                $('#btn-SaveProfil').addClass("btn btn-primary");
+                $('#btn-deleteProfil').addClass("btn btn-danger");
+                $('#btn-CancelProfil').addClass("btn btn-secondary");
+                if (connected) {
+                    $('#dialog-profilForm').dialog('option', 'title', 'Modification de votre profil...');
+                    $("#profilId").val(retrieveLoggedUser().Id);
+                    $('#profilUsername').val(retrieveLoggedUser().Name);
+                    $('#profilEmail').val(retrieveLoggedUser().Email);
+                    $('#avatarGUID').val(retrieveLoggedUser().AvatarGUID);
+                    if (retrieveLoggedUser().AvatarURL != "")
+                        setImageDownloaderImage('avatar', retrieveLoggedUser().AvatarURL);
+                    else
+                        setImageDownloaderBlankImage('avatar');
+                    $('#btn-deleteProfil').show();
+                } else {
+                    $('#dialog-profilForm').dialog('option', 'title', 'Création de compte...');
+                    $('#profilUsername').val("");
+                    $('#profilEmail').val("");
+                    setImageDownloaderBlankImage('avatar');
+                    $('#btn-deleteProfil').hide();
+                }
+                $('#profilPassword').val("");
+                $('#profilConfirmPassword').val("");
+                $("#btn_OpenAddphotoDialog").hide();
+            });
+            $('#dialog-profilForm').on('dialogclose', function (event) {
+                pausephotosListPeriodicRefresh = false;
+                editProfil = false;
+                if (connected)
+                    $("#btn_OpenAddphotoDialog").show();
+            });
+        }
+
+        function OpenProfilDialog() {
+            if (!operationOnGoing()) {
+                pausephotosListPeriodicRefresh = true;
+                editProfil = true;
+                $("#dialog-profilForm").dialog('open');
+            }
+        }
+
+        function confirmDeleteAccount() {
+            pausephotosListPeriodicRefresh = true;
+            $.confirm({
+                title: 'Retrait de compte',
+                content: '<b>Voulez-vous vraiment effacer votre compte <br>ainsi que toutes vos photos?</b>',
+                buttons: {
+                    confirmer:
+                        function () {
+                            if (connected) {
+                                webAPI_DELETE_Account(retrieveLoggedUser().Id,
+                                    function () {
+                                        closeAllDialog();
+                                        pausephotosListPeriodicRefresh = false;
+                                        forceLogout();
+                                    },
+                                    AlertError);
+                            }
+                        },
+                    annuler: {},
+                }
+            });
+        }
+
+        function initLoginDialog() {
+            $("#dialog-loginForm").dialog(
+                {
+                    autoOpen: false,
+                    show: {effect: 'fade', speed: 400},
+                    hide: {effect: 'fade', speed: 400},
+                    buttons: [
+                        {
+                            id: 'btn-OkLogin',
+                            text: 'Ok',
+                            click: function () {
+                                pausephotosListPeriodicRefresh = false;
+                                $("#dialog-waiting").dialog('open');
+                                webAPI_login($("#loginEmail").val(),
+                                    $("#loginPassword").val(),
+                                    () => {
+                                        $("#dialog-loginForm").dialog("close");
+                                        updateUI();
+                                    },
+                                    failLogin);
+                            }
+                        },
+                        {
+                            id: 'btn-CancelLogin',
+                            text: 'Annuler',
+                            click: function () {
+                                $(this).dialog('close');
+                            }
+                        }
+                    ]
+                });
+            $('#dialog-loginForm').on('dialogopen', function (event) {
+                pausephotosListPeriodicRefresh = true;
+                if (localStorage.getItem('rememberme') == "1") {
+                    $("#remember-me").attr("checked", "checked");
+                    let email = localStorage.getItem('loginemail');
+                    let password = localStorage.getItem('loginpassword');
+                    if (email) $("#loginEmail").val(email);
+                    if (password) $("#loginPassword").val(password);
+                } else {
+                    $("#loginEmail").val("");
+                    $("#loginPassword").val("");
+                }
+            });
+            $('#dialog-loginForm').on('dialogclose', function (event) {
+                pausephotosListPeriodicRefresh = false;
+                if ($('#remember-me').is(":checked")) {
+                    localStorage.setItem('rememberme', "1");
+                    localStorage.setItem('loginemail', $("#loginEmail").val());
+                    localStorage.setItem('loginpassword', $("#loginPassword").val());
+                } else {
+                    localStorage.setItem('rememberme', "0");
+                    localStorage.removeItem('loginemail');
+                    localStorage.removeItem('loginpassword');
+                }
+            });
+        }
+
+        function OpenConfirmLogout() {
+            if (!operationOnGoing()) {
+                $.confirm({
+                    title: 'Déconnection...',
+                    content: 'Voulez-vous vous déconnecter?',
+                    buttons: {
+                        confirmer: function () {
+                            pausephotosListPeriodicRefresh = false;
+                            webAPI_logout(retrieveLoggedUser().Id, updateUI, AlertError);
+                        },
+                        annuler: {},
+                    }
+                });
+            }
+        }
+
+        function OpenLoginForm() {
+            if (!operationOnGoing()) {
+                $('#btn-OkLogin').addClass("btn btn-primary");
+                $('#btn-CancelLogin').addClass("btn btn-secondary");
+                $("#dialog-loginForm").dialog('open');
+            }
+        }
+
+        function setUsername(username) {
+            let avatar = $(".avatar");
+            avatar.attr("src", retrieveLoggedUser().AvatarURL)
+            avatar.attr("hidden", false)
+            $("#username").html("<span id='link_OpenProfilDialog' style='color:blue;' tooltip='Modifier votre profil' class='clickable'>" + username + "</span>");
+            $("#link_OpenProfilDialog").click(OpenProfilDialog);
+        }
+
+        function unsetUsername() {
+            $(".avatar").attr("hidden", true);
+            $("#username").html("<span style='color:gray'>non connecté</span>");
+        }
+
+        function failLogin() {
+            Alert("Connexion échouée");
+            connected = false;
+            unsetUsername();
+            updateUI();
+        }
+
+        function updateConnected() {
+            connected = false;
+            let username = "";
+            if (retrieveLoggedUser() != null) {
+                username = retrieveLoggedUser().Name;
+                connected = true;
+            }
+            if (connected) {
+                setUsername(username);
+                $("#avatarContainer").empty();
+                $("#avatarContainer").append(html_fittedAvatar(retrieveLoggedUser().AvatarURL, 'avatar'));
+                $("#btn_OpenLoginForm").hide();
+                $("#btn_OpenConfirmLogout").show();
+                $("#btn_OpenAddphotoDialog").show();
+                $('#btn_OpenProfilDialog').attr("tooltip", "Profil");
+            } else {
+                $("#avatarContainer").empty();
+                unsetUsername();
+                $("#btn_OpenLoginForm").show();
+                $("#btn_OpenConfirmLogout").hide();
+                $("#btn_OpenAddphotoDialog").hide();
+                $('#btn_OpenProfilDialog').attr("tooltip", "Création de compte");
+            }
+        }
+
+        function toogleSearchVisibility() {
+            if (searchShowed)
+                hideSearch();
+            else
+                showSearch();
+            searchShowed = !searchShowed;
+        }
+
+        function hideSearch() {
+            $(".searchBar").hide({duration: 400});
+            $("#showSearchIcon").removeClass("glyphicon glyphicon-zoom-out");
+            $("#showSearchIcon").addClass("glyphicon glyphicon-zoom-in");
+        }
+
+        function showSearch() {
+            $(".searchBar").show({duration: 400});
+            $("#showSearchIcon").removeClass("glyphicon glyphicon-zoom-in");
+            $("#showSearchIcon").addClass("glyphicon glyphicon-zoom-out");
+        }
+
+        function updatePhotosSearch() {
+            queryString = "?";
+            sorted.forEach(sort => {
+                queryString += "sort=" + sort.field.toLowerCase();
+                if (sort.desc) {
+                    queryString += ',desc';
+                }
+            });
+            queryString += "&offset=0&limit=" + limit;
+        }
+
+        function addSearchKey(key, value) {
+            if (value !== "") {
+                if (search !== "")
+                    search += "&";
+                search += key + "=" + value + "*";
+            }
+        }
+
+        function updateUI() {
+            updateConnected();
+            getPhotos(true);
+            webAPI_GET_ALL_User(PopulateUserDropdown, console.log);
+        }
+
+        function getPhotos(forceRefreshnewsList = false) {
+            if (forceRefreshnewsList) {
+                SetQueryStringOffset(0);
+                webAPI_GET_ALL(queryString, UpdateNewsList, AlertError);
+            } else
+                webAPI_HEAD(CheckNewsETag, AlertError);
+        }
+
+        function CheckNewsETag(ETag) {
+            if (ETag !== currentETag) {
+                webAPI_GET_ALL(queryString, UpdateNewsList, AlertError);
+            }
+        }
+        function CheckUsersETag(ETag) {
+            if (ETag !== currentUsersEtag) {
+                webAPI_GET_ALL_User(PopulateUserDropdown, AlertError);
+            }
+        }
+
+        function insertWaitingStatus() {
+            $('#newsList').empty();
+            $("#dialog-waiting").dialog('open');
+        }
+
+        function statusToString(status) {
+            let text = "Le server ne répond pas.";
+            switch (status) {
+                case 401:
+                    text = "<br>Requête non autorisée. <br>Vous devez être connecté.";
+                    break;
+                case 409:
+                    text = "<br>Conflit de données. <br>Requête refusée.";
+                    break;
+                case 422:
+                    text = "<br>Format des données soumises incorrect. <br>Requête refusée.";
+                    break;
+            }
+            return text;
+        }
+
+        function closeAllDialog() {
+            $(".dialog").dialog("close");
+        }
+
+        function forceLogout() {
+            Alert("Expiration de permission d'accès. Vous n'êtes plus connecté.");
+            closeAllDialog();
+            deConnect();
+            updateUI(true);
+        }
+
+        function Alert(message) {
+            $.confirm({
+                title: message,
+                content: '',
+                buttons: {
+                    fermer: function () {
+                    }
+                }
+            });
+        }
+
+        function AlertError(status) {
+            $.confirm({
+                title: "Message provenant du server..." + status,
+                content: '<img src="images/error.png" style="width:60px;margin:10px" alt="httpError"/>' + statusToString(status),
+                buttons: {
+                    fermer: function () {
+                        this.close();
+                        if (status == 401) {
+                            forceLogout();
+                        }
+                        pausephotosListPeriodicRefresh = true;
+                    }
+                }
+            });
+        }
+
+        function initNewsValidation() {
+            photoValidationProvider = new ValidationProvider("created-news-form");
+            photoValidationProvider.addControl("created-news-title", ValidateNewsTitle, false /*validateOnLeave*/);
+            photoValidationProvider.addControl("created-news-text", ValidateNewsText, false /*validateOnLeave*/);
+        }
+
+        function resetNewsValidation() {
+            photoValidationProvider.reset();
+        }
+
+        function ValidateNewsTitle() {
+            let TBX_Title = document.getElementById("created-news-title");
+            if (TBX_Title.value === "")
+                return "Titre manquant";
+            return "";
+        }
+
+        function ValidateNewsText() {
+            let TBX_Description = document.getElementById("created-news-text");
+            if (TBX_Description.value === "")
+                return "Texte de la nouvelle manquant";
+            return "";
+        }
+
+        function initProfilValidation() {
+            profilValidationProvider = new ValidationProvider("profilForm");
+            profilValidationProvider.addControl("profilUsername", validate_ProfilUsername, false /*validateOnLeave*/);
+            profilValidationProvider.addControl("profilEmail", validate_ProfilEmail, false /*validateOnLeave*/);
+            profilValidationProvider.addControl("profilPassword", validate_ProfilPassword, false /*validateOnLeave*/);
+            profilValidationProvider.addControl("profilConfirmPassword", validate_ProfilConfirmPassword, false /*validateOnLeave*/);
+        }
+
+        function resetProfilValidation() {
+            profilValidationProvider.reset();
+        }
+
+        function validate_ProfilUsername() {
+            let TBX_Username = document.getElementById("profilUsername");
+            if (TBX_Username.value === "")
+                return "Nom d'usager manquant";
+            return "";
+        }
+
+        function validate_ProfilEmail() {
+            let TBX_Email = document.getElementById("profilEmail");
+            let EmailRegex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            if (TBX_Email.value === "")
+                return "Courriel manquant";
+            if (!EmailRegex.test(TBX_Email.value))
+                return "Courriel invalide";
+            return "";
+        }
+
+        function validate_ProfilPassword() {
+            return "";
+        }
+
+        function validate_ProfilConfirmPassword() {
+            let TBX_Password = document.getElementById("profilPassword");
+
+            let TBX_Confirm = document.getElementById("profilConfirmPassword");
+            if (TBX_Password.value != "") {
+                if (TBX_Confirm.value != TBX_Password.value)
+                    return "Différent du mot de passe."
+            }
+            return "";
+        }
+
+        function html_fittedAvatar(Avatar_url, css = '') {
+            return "<div class='" + css + "' style='background:url(" + Avatar_url + ") no-repeat center; background-size: cover; margin-right:5px;'></div>";
+        }
+
+        function NewsDom(news, loggedUserId) {
+
+            let container = $('<div class=\"grid-container\" title=\"'+ news.Id+'\">');
+
+            let avatar = $('<img src="' + news.UserAvatar + '" alt="" class="news-avatar news-box">');
+            let userName = $('<span class="Username news-box">' + news.Username + '</span>');
+            let creationDateTime = $('<span class="CreationDateTime news-box">' + news.Date + '</span>');
+            let title = $('<span class="Title news-box">' + news.Title + '</span>');
+            let editCmd = $('<div class="Erase">' +
+                '<button class="glyphicon glyphicon-edit" id="news-edit" onclick="CreateEditNewsForm(this)" newsId="' + news.Id + '"></button>' +
+                '<button class="glyphicon glyphicon-remove" id="news-delete" onclick="deletephoto(this)" newsId="' + news.Id + '"></button>' +
+                '</div>');
+            let content = $('<div class="grid-content news-box"></div>');
+            let image = $('<a ' +
+                'href="' + news.OriginalURL + '"' +
+                'target="_blank"' +
+                'role="link">' +
+                '<img src="' + news.OriginalURL + '" alt="Photo"' +
+                'style="width: 100%; object-fit: cover; border: 0;">' +
+                '</a>');
+            let text = $('<span>' + news.Text + '</span>');
+
+            content.append(image);
+            content.append(text);
+
+            container.append(avatar);
+            container.append(userName);
+            container.append(creationDateTime);
+            container.append(title);
+            container.append(content);
+            if (news.UserId === loggedUserId)
+                container.append(editCmd);
+
+            return container;
+        }
+
+        function CreateNewsForm(htmlNewsButton){
+            console.log("newsForm");
+            if(!editMode){
+                editMode = true;
+                pausephotosListPeriodicRefresh = true;
+                let user, container,closingForm,form,avatar,userName,creationDateTime,editCmd,content,image,text,title;
+                if(htmlNewsButton){
+                     user = retrieveLoggedUser();
+                     container = $('<div class="grid-container" id="create-news-container">');
+                     form = $('<form id="created-news-form">');
+                     closingForm = $('</form>');
+                     avatar = $('<img src="' + user.AvatarURL + '" alt="" class="news-avatar news-box">');
+                     userName = $('<span class="Username news-box">' + user.Name + '</span>');
+                     creationDateTime = $('<span class="CreationDateTime news-box">' + Date.now() + '</span>');
+                     title = $('<input class="Title news-box" id="created-news-title">');
+                     editCmd = $('<div class="Erase">' +
+                        '<div class="glyphicon glyphicon-ok" style="color: greenyellow; font-size: 25px;" id="submit-news-creation"></div>' +
+                        '<div class="glyphicon glyphicon-remove" style="color: darkred; font-size: 25px;" id="cancel-news-creation"></div>' +
+                        '</div>');
+                     content = $('<div class="grid-content news-box"></div>');
+                     image = $('<div class="imageDownloader" id="create-news" defautimagesrc="images/No_image.png"></div>');
+                     text = $('<textarea id="created-news-text" style="width: 100%; height: 10rem;">');
+
+                    content.append(image);
+                    content.append(text);
+
+                    container.append(form);
+                    container.append(avatar);
+                    container.append(userName);
+                    container.append(creationDateTime);
+                    container.append(title);
+                    container.append(content);
+                    container.append(editCmd);
+                    container.append(closingForm);
+
+                    $("#newsList").prepend(container);
+
+                    initUploaderForId("create-news");
+                    setImageDownloaderBlankImage('create-news');
+                    document.querySelector("#cancel-news-creation").addEventListener('click', CancelNewsCreation);
+                    document.querySelector("#submit-news-creation").addEventListener('click', CreateNewsFromForm);
+                    initNewsValidation();
+                }
+            }
+        }
+        function CreateEditNewsForm(editBtn){
+            webAPI_GET(editBtn.attributes.newsid.value, NewsToNewsForm, console.log);
+        }
+
+        function NewsToNewsForm(news){
+            console.log("CREATE EDIT NEWS FORM");
+            let container = $('div[title="'+ news.Id+'"]');
+            console.log(container);
+            let form = $('<form id="created-news-form">');
+            let closingForm = $('</form>');
+            let newsId = $('<input id="created-news-id" value="'+ news.Id +'" hidden>')
+            let avatar = $('<img src="' + news.UserAvatar + '" alt="" class="news-avatar news-box">');
+            let userName = $('<span class="Username news-box">' + news.Username + '</span>');
+            let creationDateTime = $('<span class="CreationDateTime news-box">' + news.Date + '</span>');
+            let title = $('<input class="Title news-box" id="created-news-title" value="' + news.Title + '">');
+            let editCmd = $('<div class="Erase">' +
+                '<div class="glyphicon glyphicon-ok" style="color: greenyellow; font-size: 25px;" id="submit-news-edit"></div>' +
+                '<div class="glyphicon glyphicon-remove" style="color: darkred; font-size: 25px;" id="cancel-news-edit"></div>' +
+                '</div>');
+            let content = $('<div class="grid-content news-box"></div>');
+            let image = $('<div class="imageDownloader" id="create-news" defautimagesrc="'+ news.OriginalURL + '"></div>');
+            let text = $('<textarea id="created-news-text" style="width: 100%; height: 10rem;" ">'+ news.Text +' </textarea>');
+            let pictureGUID = $('<input id="created-news-pictureGUID" value="'+ news.GUID +'" hidden>');
+            content.append(image);
+            content.append(text);
+
+            container.empty();
+            container.append(form);
+            container.append(newsId);
+            container.append(avatar);
+            container.append(userName);
+            container.append(creationDateTime);
+            container.append(title);
+            container.append(content);
+            container.append(editCmd);
+            container.append(pictureGUID)
+            container.append(closingForm);
+
+            //$("#newsList").prepend(container);
+
+            initUploaderForId("create-news");
+            clearImageData('create-news');
+            if(news.OriginalURL !== "")
+                setImageDownloaderImage('create-news', news.OriginalURL)
+            else
+                setImageDownloaderBlankImage('create-news')
+
+            setImageDownloaderImage('create-news', news.OriginalURL);
+            document.querySelector("#cancel-news-edit").addEventListener('click', CancelNewsEdition);
+            document.querySelector("#submit-news-edit").addEventListener('click', CreateNewsFromForm);
+            initNewsValidation();
+        }
+        function CancelNewsCreation(){
+            editMode = false;
+            pausephotosListPeriodicRefresh = false;
+
+            $("#create-news-container").remove();
+        }
+        function CancelNewsEdition(){
+            editMode = false;
+            pausephotosListPeriodicRefresh = false;
+            getPhotos(true);
+        }
+        function CreateNewsFromForm(evt) {
+            editMode = false;
+            pausephotosListPeriodicRefresh = false;
+            let photo = makeNewsFromNewsForm(evt.target.attributes.id.value === "submit-news-edit");
+            if (photoValidationProvider.isValid()) {
+                $("#dialog-waiting").dialog('open');
+                if(evt.target.attributes.id.value === "submit-news-creation")
+                    webAPI_POST(photo, () => {updateUI();}, AlertError);
+                else
+                    webAPI_PUT(photo, () => {updateUI();}, AlertError);
+            }
+        }
+
+        function UpdateNewsList(photos, ETag, addToTheEnd = false) {
+            if(photos.length !== 0){
+                if(!addToTheEnd)
+                    EmptyNewsList();
+                currentETag = ETag;
+                let loggedUserId = (retrieveLoggedUser() ? retrieveLoggedUser().Id : null);
+                if (loggedUserId) {
+                    photos.forEach(photo => {
+                        $('#newsList').append(NewsDom(photo, loggedUserId));
+                    });
+
+                }
+                let lastNews = document.querySelector(".grid-container:last-child");
+                if(lastNews !== null)
+                    observer.observe(lastNews);
+
+            }
+            $("#dialog-waiting").dialog('close');
+        }
+
+        function EmptyNewsList(){
+            $('#newsList').empty();
+        }
+
+        function PopulateUserDropdown(users, etag) {
+            currentUsersEtag = etag;
+
+            let htmlDropdown = $('#search_user');
+            let loggedUser = retrieveLoggedUser();
+            if(!!loggedUser){
+                users = users.sort((a, b) => { if(a.Id === loggedUser.Id) return -1; else a.Name.localeCompare(b.Name, 'fr')});
+                users[0].Name = "Mes nouvelles";
+                htmlDropdown.empty();
+                htmlDropdown.append('<option value="*">Tous</option>');
+                for (const user of users) {
+                    htmlDropdown.append('<option value="' + user.Id + '">' + user.Name + '</option>');
+                }
+            }
+        }
+
+        function UserDropdownPeriodicRefresh(){
+            webAPI_HEAD_Users(CheckUsersETag, console.log);
+        }
+
+        function HandleUserDropdown(evt) {
+            const userIdRegExp = new RegExp(/UserId=([0-9]|\*)+/);
+            if (userIdRegExp.test(queryString)) {
+                queryString = queryString.replace(userIdRegExp, ("UserId=" + evt.target.value))
+            } else
+                queryString += "&UserId=" + evt.target.value;
+            EmptyNewsList();
+            observer.disconnect();
+            SetQueryStringOffset(0);
+            console.log("handleUserDropdown: " + queryString);
+            webAPI_GET_ALL(queryString, UpdateNewsList, console.log, false);
+        }
+
+        function InitPagination(){
+            let options = {
+                root: document.querySelector("body"),
+                rootMargin: '0px',
+                threshold: 0.25
+            }
+            observer = new IntersectionObserver(HandlePagination, options);
+        }
+
+        function HandlePagination(entries, observer){
+            entries.forEach(entry =>{
+                console.log(entry);
+                if(entry.intersectionRatio > 0.2){
+                    offset++;
+
+                    SetQueryStringOffset(offset);
+                    SetQueryStringLimit();
+                    console.log("HandlePagination: " + queryString);
+                    observer.disconnect(); // Removing the old intersection checkup because it's not anymore the last news.
+                    webAPI_GET_ALL(queryString, UpdateNewsList, console.log, true);
+                }
+            })
+        }
+
+        function SetQueryStringOffset(offset){
+            const offsetRegExp = new RegExp(/(offset)=[0-9]+/);
+            if (offsetRegExp.test(queryString)) {
+                queryString = queryString.replace(offsetRegExp, ("offset=" + offset))
+            } else
+                queryString += queryString.includes('?') ? "&" : "?" + "offset=" + offset;
+        }
+
+        function SetQueryStringLimit(){
+            const limitRegExp = new RegExp(/limit=[0-9]+/)
+
+            if (!limitRegExp.test(queryString)) {
+                queryString += "&limit=" + limit;
+            } else
+                queryString = queryString.replace(limitRegExp, ("limit=" + limit))
+        }
+    </script>
+</body>
+</html>
